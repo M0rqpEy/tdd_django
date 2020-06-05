@@ -5,6 +5,7 @@ from django.test import TestCase
 from lists.views import home_page
 from lists.models import Item
 
+
 # Create your tests here.
 class HomePageTests(TestCase):
     """тест домашней страницы"""
@@ -33,24 +34,36 @@ class HomePageTests(TestCase):
         """тест перенаправление после post-запроса"""
         response = self.client.post('/', data={'item_text': 'A new list item'})
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['location'], '/')
+        self.assertEqual(
+            response['location'],
+            '/lists/new-to-do-items/'
+        )
 
     def test_only_saves_items_when_necessary(self):
         """тест сохраняет елементы только когда нужно"""
         response = self.client.get('/')
         self.assertEqual(Item.objects.count(), 0)
 
-    def test_display_all_list_items(self):
-        """тест отображаются ли все елем. списка"""
-        Item.objects.create(text='elem 1')
-        Item.objects.create(text='elem 2')
 
-        response = self.client.get('/')
+class ListsViewsTest(TestCase):
+    """тест представления списка"""
 
-        self.assertIn('elem 1', response.content.decode())
-        self.assertIn('elem 2', response.content.decode())
+    def test_uses_list_template(self):
+        """тест: используется шаблон списка"""
+        response = self.client.get('/lists/new-to-do-items/')
+        self.assertTemplateUsed(response, 'lists/list.html')
 
+    def test_display_all_items(self):
+        """тест: отображаются все элементы списка"""
+        Item.objects.create(text='item1')
+        Item.objects.create(text='item2')
 
+        response = self.client.get(
+                '/lists/new-to-do-items/'
+        )
+
+        self.assertContains(response, 'item1')
+        self.assertContains(response, 'item2')
 
 
 class ItemModelTests(TestCase):
