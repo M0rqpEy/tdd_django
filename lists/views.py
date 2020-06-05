@@ -2,6 +2,6 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 # Create your views here.
-def home_page(requests):
+def home_page(request):
     """домашня страница"""
-    return HttpResponse('<html><title>To-Do lists</title></html>')
+    return render(request, 'lists/home.html')
