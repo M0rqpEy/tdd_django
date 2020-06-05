@@ -3,9 +3,10 @@ import unittest
 import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import WebDriverException
 from django.test import LiveServerTestCase
 
-
+MAX_WAIT = 10
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -23,11 +24,19 @@ class NewVisitorTest(LiveServerTestCase):
         time.sleep(3)
         self.browser.quit()
 
-    def check_for_row_in_list_table(self, row_text):
-        """check row in list table """
-        table = self.browser.find_element_by_id('id_list_table')
-        rows = table.find_elements_by_tag_name('tr')
-        self.assertIn(row_text, [row.text for row in rows])
+    def wait_for_row_in_list_table(self, row_text):
+        """ожидать строку в списке таблицы """
+        start_time = time.time()
+        while 1:
+            try:
+                table = self.browser.find_element_by_id('id_list_table')
+                rows = table.find_elements_by_tag_name('tr')
+                self.assertIn(row_text, [row.text for row in rows])
+                return
+            except (AssertionError, WebDriverException) as e:
+                if time.time() - start_time > MAX_WAIT:
+                    raise e
+                time.sleep(0.5)
 
     def test_can_start_a_list_and_retvieve_it_later(self):
         """тест: можно начать список и получить его позже"""
@@ -55,8 +64,7 @@ class NewVisitorTest(LiveServerTestCase):
         # Когда она нажимает enter, страница обновляется, и теперь страница
         # содержит "1: Купить павлиньи перья" в качестве элемента списка
         input_box.send_keys(Keys.ENTER)
-        time.sleep(1)
-        self.check_for_row_in_list_table("1: Купить павлиньи перья")
+        self.wait_for_row_in_list_table("1: Купить павлиньи перья")
 
         # Текстовое поле по-прежнему приглашает ее добавить еще один элемент.
         # Она вводит "Сделать мушку из павлиньих перьев"
@@ -64,13 +72,59 @@ class NewVisitorTest(LiveServerTestCase):
         input_box = self.browser.find_element_by_id('id_new_item')
         input_box.send_keys('Сделать мушку из павлиньих перьев')
         input_box.send_keys(Keys.ENTER)
-        time.sleep(1)
 
-        # Страница снова обновляется, и теперь показывает оба элемента ее списка
-        self.check_for_row_in_list_table("1: Купить павлиньи перья")
-        self.check_for_row_in_list_table("2: Сделать мушку из павлиньих перьев")
-        self.fail('Закончить тест')
+        # Страница снова обновляется,
+        # и теперь показывает оба элемента ее списка
+        self.wait_for_row_in_list_table("1: Купить павлиньи перья")
+        self.wait_for_row_in_list_table("2: Сделать мушку из павлиньих перьев")
         # Эдит интересно, запомнит ли сайт ее список. Далее она видит, что
         # сайт сгенерировал для нее уникальный URL-адрес – об этом
         # выводится небольшой текст с объяснениями.
         # Она посещает этот URL-адрес – ее список по-прежнему там.
+
+    def test_multiple_users_can_start_lists_at_different_urls(self):
+        """тест многочисленные пользователи могут начать cписки
+            по разным урлам
+        """
+        # Эдит начинает новый список
+        self.browser.get(self.live_server_url)
+        input_box = self.browser.find_element_by_id('id_new_item')
+        input_box.send_keys('Купить павлиньи перья')
+        input_box.send_keys(Keys.ENTER)
+        self.wait_for_row_in_list_table("1: Купить павлиньи перья")
+
+        # Она замечает, что ее список имеет уникальный URL-адрес
+        edith_list_url = self.browser.current_url
+        self.assertRegex(edith_list_url, '/lists/.+')
+
+        # Теперь новый пользователь, Фрэнсис, приходит на сайт.
+        ## Мы используем новый сеанс браузера, чтобы никакая
+        ## информация от Эдит не прошла через данные cookie и пр.
+        self.browser.quit()
+        self.browser = webdriver.Firefox(
+            executable_path=os.path.join(PROJ_DIR, 'geckodriver')
+        )
+
+        # Фрэнсис посещает домашнюю страницу.
+        # Нет никаких признаков списка Эдит
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Купить павлиньи перья', page_text)
+
+        # Фрэнсис начинает новый список, вводя новый элемент. Он менее
+        # интересен, чем список Эдит...
+        input_box = self.browser.find_element_by_id('id_new_item')
+        input_box.send_keys('Купить молоко')
+        input_box.send_keys(Keys.ENTER)
+        self.wait_for_row_in_list_table('1: Купить молоко')
+
+        # Фрэнсис получает уникальный URL-адрес
+        francis_list_url = self.browser.current_url
+        self.assertRegex(francis_list_url, '/lists/.+')
+        self.assertNotEqual(francis_list_url, edith_list_url)
+
+        # Опять-таки, нет ни следа от списка Эдит
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Купить павлиньи перья', page_text)
+        self.assertIn('Купить молоко', page_text)
+        self.fail('Закончить тест')
