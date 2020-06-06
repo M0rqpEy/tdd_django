@@ -1,19 +1,28 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from .models import Item
+from .models import Item, List
 
-# Create your views here.
+
 def home_page(request):
     """домашня страница"""
-    if request.method == 'POST':
-        new_item_text = request.POST.get('item_text')
-        Item.objects.create(text=new_item_text)
-        return redirect('/lists/new-to-do-items/')
-    else:
-        new_item_text = ""
     return render(request, 'lists/home.html')
 
-def view_list(request):
+
+def view_list(request, list_id):
     """представление списка"""
-    items = Item.objects.all()
-    return render(request, 'lists/list.html', {'items': items})
+    list_ = List.objects.get(id=list_id)
+    return render(request, 'lists/list.html', {"list":list_})
+
+
+def new_list(request):
+    """новый список"""
+    list_ = List.objects.create()
+    Item.objects.create(text=request.POST.get('item_text'), list=list_)
+    return redirect(f'/lists/{list_.id}/')
+
+
+def add_item(request, list_id):
+    """добавить элемент"""
+    list_ = List.objects.get(id=list_id)
+    Item.objects.create(text=request.POST['item_text'], list=list_)
+    return redirect(f'/lists/{list_.id}/')

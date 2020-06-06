@@ -5,12 +5,13 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import WebDriverException
 from django.test import LiveServerTestCase
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
 MAX_WAIT = 10
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-class NewVisitorTest(LiveServerTestCase):
+class NewVisitorTest(StaticLiveServerTestCase):
     """тест нового посетителя"""
 
     def setUp(self):
@@ -18,10 +19,13 @@ class NewVisitorTest(LiveServerTestCase):
         self.browser = webdriver.Firefox(
             executable_path=os.path.join(PROJ_DIR, 'geckodriver')
         )
+        staging_server = os.environ.get('STAGING_SERVER')
+        if staging_server:
+            self.live_server_url = 'http://' + staging_server
 
     def tearDown(self):
         """демонтаж"""
-        time.sleep(3)
+        time.sleep(1)
         self.browser.quit()
 
     def wait_for_row_in_list_table(self, row_text):
@@ -128,3 +132,17 @@ class NewVisitorTest(LiveServerTestCase):
         self.assertNotIn('Купить павлиньи перья', page_text)
         self.assertIn('Купить молоко', page_text)
         self.fail('Закончить тест')
+
+    def test_layout_and_styling(self):
+        """тест макета и стилевого оформления"""
+        # Эдит открывает домашнюю страницу
+        self.browser.get(self.live_server_url)
+        self.browser.set_window_size(1024, 768)
+
+        # Она замечает, что поле ввода аккуратно центрировано
+        input_box = self.browser.find_element_by_id('id_new_item')
+        self.assertAlmostEqual(
+            input_box.location['x'] + input_box.size['width'] /2,
+            512,
+            delta=10
+        )
