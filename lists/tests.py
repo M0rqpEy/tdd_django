@@ -41,8 +41,11 @@ class ListsViewsTest(TestCase):
     def test_display_all_items_for_that_list(self):
         """тест: отображаются все элементы списка"""
         list_ = List.objects.create()
+        another_list = List.objects.create()
         Item.objects.create(text='item1', list=list_)
         Item.objects.create(text='item2', list=list_)
+        Item.objects.create(text='item3', list=another_list)
+        Item.objects.create(text='item4', list=another_list)
 
         response = self.client.get(
                 f'/lists/{list_.id}/'
@@ -50,6 +53,8 @@ class ListsViewsTest(TestCase):
 
         self.assertContains(response, 'item1')
         self.assertContains(response, 'item2')
+        self.assertNotContains(response, 'item3')
+        self.assertNotContains(response, 'item4')
 
     def test_pass_correct_list_to_template(self):
         """тест: передается правильный шаблон спискa """
