@@ -7,11 +7,6 @@ urlpatterns = [
     path(
         '<int:list_id>/',
         views.view_list,
-        name='view-list'
-    ),
-    path(
-        '<int:list_id>/add_item',
-        views.add_item,
-        name='add_item'
+        name='view_list'
     )
 ]
