@@ -19,7 +19,7 @@ def view_list(request, list_id):
             item = Item(text=request.POST.get('item_text'), list=list_)
             item.full_clean()
             item.save()
-            return redirect(f'/lists/{list_.id}/')
+            return redirect(list_)
         except ValidationError as e:
             error = mark_safe("You can't have an empty list item")
 
