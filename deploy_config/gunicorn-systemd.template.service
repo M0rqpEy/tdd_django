@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn server for SOME_SITE_NAME
+
+[Service]
+Restart=on-failre
+User=SOME_USER_NAME_LINUX_SYSTEM
+WorkingDirectory=/home/SOME_USER_NAME_LINUX_SYSTEM/sites/SOME_SITE_NAME
+ExecStart=/home/SOME_USER_NAME_LINUX_SYSTEM/sites/SOME_SITE_NAME/venv/bin/gunicorn \
+        --bind unix:/tmp/SOME_SITE_NAME.socket \
+        config.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
