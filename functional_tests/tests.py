@@ -4,20 +4,23 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.firefox.options  import Options
 from django.test import LiveServerTestCase
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
 MAX_WAIT = 10
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 class NewVisitorTest(StaticLiveServerTestCase):
     """тест нового посетителя"""
 
     def setUp(self):
         """установки"""
+        options = Options()
+        options.headless = True
         self.browser = webdriver.Firefox(
-            executable_path=os.path.join(PROJ_DIR, 'geckodriver')
+            executable_path=os.path.join(PROJ_DIR, 'geckodriver'),
+            options=options
         )
         staging_server = os.environ.get('STAGING_SERVER')
         if staging_server:
@@ -104,10 +107,8 @@ class NewVisitorTest(StaticLiveServerTestCase):
         # Теперь новый пользователь, Фрэнсис, приходит на сайт.
         ## Мы используем новый сеанс браузера, чтобы никакая
         ## информация от Эдит не прошла через данные cookie и пр.
-        self.browser.quit()
-        self.browser = webdriver.Firefox(
-            executable_path=os.path.join(PROJ_DIR, 'geckodriver')
-        )
+        self.tearDown()
+        self.setUp()
 
         # Фрэнсис посещает домашнюю страницу.
         # Нет никаких признаков списка Эдит
