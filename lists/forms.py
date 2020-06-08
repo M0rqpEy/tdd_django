@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.safestring import mark_safe
 
 from .models import Item
 
@@ -10,7 +11,7 @@ from .models import Item
 #             'class': "form-control input-group-lg",
 #         })
 #     )
-EMPTY_ITEM_ERROR = "You can't have an empty list item"
+EMPTY_ITEM_ERROR = mark_safe("You can't have an empty list item")
 
 class ItemForm(forms.ModelForm):
 
