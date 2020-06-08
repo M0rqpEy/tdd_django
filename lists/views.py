@@ -18,10 +18,9 @@ def view_list(request, list_id):
     if request.method == "POST":
         form = ItemForm(data=request.POST)
         if form.is_valid():
-            Item.objects.create(
-                        text=request.POST.get('text'),
-                        list=list_
-            )
+            new_item = form.save(commit=False)
+            new_item.list = list_
+            new_item.save()
             return redirect(list_)
     return render(request, 'lists/list.html', {"list": list_, 'form': form})
 
@@ -30,9 +29,10 @@ def new_list(request):
     """новый список"""
     form = ItemForm(data=request.POST)
     if form.is_valid():
-        list_ = List.objects.create()
-        Item.objects.create(text=request.POST.get('text'), list=list_)
-        return redirect(list_)
+        new_item = form.save(commit=False)
+        new_item.list = List.objects.create()
+        new_item.save()
+        return redirect(new_item.list)
     else:
         return render(request, 'lists/home.html', {"form": form})
 
