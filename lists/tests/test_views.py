@@ -1,9 +1,9 @@
-from django.urls import resolve
-from django.http import HttpRequest
+from django.urls import resolve, reverse
 from django.test import TestCase
 
 from lists.views import home_page, view_list
 from lists.models import Item, List
+from lists.forms import ItemForm
 
 
 # Create your tests here.
@@ -20,6 +20,10 @@ class HomePageTests(TestCase):
         """тест: дом. страница возвращает правильный html"""
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'lists/home.html')
+
+    def test_home_page_uses_item_form(self):
+        response = self.client.get(reverse('home'))
+        self.assertIsInstance(response.context['form'], ItemForm)
 
 
 class ListsViewsTest(TestCase):

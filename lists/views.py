@@ -3,11 +3,12 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from .models import Item, List
+from .forms import ItemForm
 
 
 def home_page(request):
     """домашня страница"""
-    return render(request, 'lists/home.html')
+    return render(request, 'lists/home.html', {'form': ItemForm()})
 
 
 def view_list(request, list_id):
