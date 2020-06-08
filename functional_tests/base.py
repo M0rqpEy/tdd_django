@@ -46,6 +46,7 @@ class FunctionalTest(StaticLiveServerTestCase):
                     raise e
                 time.sleep(0.5)
 
+
     def wait_for(self, func):
         start_time = time.time()
         while 1:
@@ -56,4 +57,5 @@ class FunctionalTest(StaticLiveServerTestCase):
                     raise e
                 time.sleep(0.5)
 
-
+    def get_item_input_box(self):
+        return self.browser.find_element_by_id('id_text')
