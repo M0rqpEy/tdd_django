@@ -3,15 +3,9 @@ from django.utils.safestring import mark_safe
 
 from .models import Item
 
-#
-# class ItemForm(forms.Form):
-#     item_text = forms.CharField(
-#         widget=forms.fields.TextInput(attrs={
-#             'placeholder': 'Enter a to-do item',
-#             'class': "form-control input-group-lg",
-#         })
-#     )
 EMPTY_ITEM_ERROR = mark_safe("You can't have an empty list item")
+DUPLICATE_ITEM_ERROR = mark_safe("You've already got this in your list")
+
 
 class ItemForm(forms.ModelForm):
 
@@ -27,3 +21,8 @@ class ItemForm(forms.ModelForm):
         error_messages = {
             'text': {'required': EMPTY_ITEM_ERROR}
         }
+
+    def clean_text(self):
+        # print(dir(self.instance))
+        # print(self.instance._get_unique_checks())
+        return self.cleaned_data['text']

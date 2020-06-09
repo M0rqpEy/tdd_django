@@ -29,10 +29,11 @@ def new_list(request):
     """новый список"""
     form = ItemForm(data=request.POST)
     if form.is_valid():
+        list_ = List.objects.create()
         new_item = form.save(commit=False)
-        new_item.list = List.objects.create()
+        new_item.list = list_
         new_item.save()
-        return redirect(new_item.list)
+        return redirect(list_)
     else:
         return render(request, 'lists/home.html', {"form": form})
 

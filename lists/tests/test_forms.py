@@ -1,6 +1,7 @@
+from unittest import skip
 from django.test import TestCase
 
-from lists.forms import ItemForm, EMPTY_ITEM_ERROR
+from lists.forms import ItemForm, EMPTY_ITEM_ERROR, DUPLICATE_ITEM_ERROR
 from lists.models import List, Item
 
 
@@ -24,4 +25,17 @@ class ItemFormTest(TestCase):
         form = ItemForm(data={'text': 'do me'})
         new_item = form.save(commit=False)
         new_item.list = list_
+        new_item.save()
         self.assertEqual(new_item.list, list_)
+
+    @skip
+    def test_duplicate_items_in_list(self):
+        list_ = List.objects.create()
+        Item.objects.create(list=list_, text='ata')
+        response = self.client.post(
+            f'/lists/{list_.id}',
+            data={'text': 'ata'}
+        )
+        form = ItemForm(data={'text': 'ata'})
+        form.is_valid()
+        self.assertContains(response, DUPLICATE_ITEM_ERROR)

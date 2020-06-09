@@ -1,3 +1,4 @@
+from unittest import skip
 from django.urls import resolve, reverse
 from django.test import TestCase
 from django.utils.safestring import mark_safe
@@ -120,6 +121,20 @@ class ViewListTest(TestCase):
         response = self.client.get(f'/lists/{list_.id}/')
         self.assertIsInstance(response.context['form'], ItemForm)
         self.assertContains(response, 'name="text"')
+
+    @skip
+    def test_duplicate_item_validation_error_end_up_on_lists_page(self):
+        list1 = List.objects.create()
+        item1 =  Item.objects.create(list=list1, text="ata")
+        response = self.client.post(
+            f'/lists/{list1.id}/',
+            data={'text': 'ata'}
+        )
+
+        expected_error = mark_safe("You've already got this in your list")
+        self.assertContains(response, expected_error)
+        self.assertTemplateUsed(response, 'lists/list.html')
+        self.assertEqual(Item.objects.count(), 1)
 
 class NewListTest(TestCase):
     """тест нового списка"""
