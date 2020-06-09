@@ -16,11 +16,12 @@ def view_list(request, list_id):
     list_ = List.objects.get(id=list_id)
     form = ItemForm()
     if request.method == "POST":
-        form = ItemForm(data=request.POST)
+        form = ItemForm(for_list=list_, data=request.POST)
         if form.is_valid():
-            new_item = form.save(commit=False)
-            new_item.list = list_
-            new_item.save()
+            # new_item = form.save(commit=False)
+            # new_item.list = list_
+            # new_item.save()
+            form.save()
             return redirect(list_)
     return render(request, 'lists/list.html', {"list": list_, 'form': form})
 

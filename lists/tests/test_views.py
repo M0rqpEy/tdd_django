@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 
 from lists.views import home_page, view_list
 from lists.models import Item, List
-from lists.forms import ItemForm, EMPTY_ITEM_ERROR
+from lists.forms import ItemForm, EMPTY_ITEM_ERROR, DUPLICATE_ITEM_ERROR
 
 
 # Create your tests here.
@@ -122,17 +122,15 @@ class ViewListTest(TestCase):
         self.assertIsInstance(response.context['form'], ItemForm)
         self.assertContains(response, 'name="text"')
 
-    @skip
+
     def test_duplicate_item_validation_error_end_up_on_lists_page(self):
         list1 = List.objects.create()
-        item1 =  Item.objects.create(list=list1, text="ata")
+        Item.objects.create(list=list1, text="ata")
         response = self.client.post(
             f'/lists/{list1.id}/',
             data={'text': 'ata'}
         )
-
-        expected_error = mark_safe("You've already got this in your list")
-        self.assertContains(response, expected_error)
+        self.assertContains(response, DUPLICATE_ITEM_ERROR)
         self.assertTemplateUsed(response, 'lists/list.html')
         self.assertEqual(Item.objects.count(), 1)
 

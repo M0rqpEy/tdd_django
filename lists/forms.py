@@ -22,7 +22,17 @@ class ItemForm(forms.ModelForm):
             'text': {'required': EMPTY_ITEM_ERROR}
         }
 
+    def __init__(self, for_list=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.list = for_list
+
     def clean_text(self):
-        # print(dir(self.instance))
-        # print(self.instance._get_unique_checks())
+        cd = self.cleaned_data
+        try:
+            list_ = self.instance.list
+        except:
+            list_ = None
+        if list_ is not None and \
+            cd['text'] in list_.item_set.values_list('text', flat=True):
+            raise forms.ValidationError(DUPLICATE_ITEM_ERROR)
         return self.cleaned_data['text']
